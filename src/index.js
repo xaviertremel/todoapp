@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
+import update from 'immutability-helper';
 
 
 
@@ -15,11 +16,9 @@ class ToDo extends React.Component {
 	}
 
 	onClickRemove() {
-		this.setState({isRemoved: true});
-		this.props.onChange(this.props.index);
+		this.setState({isRemoved: 'true'});
+		this.props.onChange(this.props.todo.id);
 	}
-
-
 	
 	render() {
 		const isRemoved = this.state.isRemoved;
@@ -45,16 +44,16 @@ class ToDoList extends React.Component {
     this.handleChange = this.handleChange.bind(this);
 	}
 
-	handleChange(index) {
-		this.props.onChange(index);
+	handleChange(id) {
+		this.props.onChange(id);
 	}
 
 	render() {
-		const todos = this.state.todos;
+		const todos = this.props.todos;
 
-	return (
+		return (
 		<ul className="list-group">
-    	{todos.map((todo, index) => <ToDo todo={todo} key={index} index={index} onChange={this.handleChange} />)}
+    	{todos.map((todo, index) => <ToDo todo={todo} key={todo.id} index={index} onChange={this.handleChange} />)}
 	  </ul>
 		)
 	}
@@ -66,16 +65,15 @@ class ToDoInput extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
+			id: 0,
 			value: '',
 			isSubmitted: false,
 			isChecked: false,
 			isRemoved: false
 		};
-
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
    	this.handleInputChange = this.handleInputChange.bind(this);
-
 	}
 
 	handleInputChange(event) {
@@ -92,8 +90,12 @@ class ToDoInput extends React.Component {
   }
 
   handleSubmit(event) {
-  	this.setState({isSubmitted: true});
+  	this.setState({
+  		id: this.state.id + 1,
+  		isSubmitted: true
+  	});
   	this.props.onChange({
+  		id: this.state.id,
   		text: this.state.value,
   		isRemoved: false
   	});
@@ -125,29 +127,39 @@ class App extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			todos: []
+			todos: [],
+			nb: 0
 		};
 		this.handleChange = this.handleChange.bind(this);
 		this.handleRemove = this.handleRemove.bind(this);
 	}
 
 	handleChange(todo) {
-		this.state.todos.push(todo);
-		this.setState({todos: this.state.todos});
+		this.setState({
+			todos: this.state.todos.concat(todo),
+			nb: this.state.nb+1
+		});
 	}
 
-	handleRemove(index) {
-		const todo = this.state.todos[index];
-		todo.isRemoved = true;
+	handleRemove(id) {
+		const collection = this.state.todos;
+		const todotoremove = this.state.todos[id];
+		todotoremove.isRemoved = true;
+		const newCollection = update(collection, {id: {$set: todotoremove}});
+		this.setState({
+			todos: newCollection,
+			nb: this.state.nb-1
+		})
 	}
 
 	render() {
 		const todos = this.state.todos;
+		const nb = this.state.nb;
 		console.log(todos);
 
 		return (
 			<div style={{width:400,marginLeft:10}}>
-			<h3>ToDos for Xavier</h3>
+			<h3>ToDos for Xavier <span className="badge">{nb} remaining</span> </h3>
 				<ToDoInput
 					onChange={this.handleChange} />
 				<ToDoList 
