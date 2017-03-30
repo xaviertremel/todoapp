@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import update from 'immutability-helper';
+import DatePicker from 'react-bootstrap-date-picker'
 
 
 
@@ -22,13 +23,20 @@ class ToDo extends React.Component {
 	
 	render() {
 		const isRemoved = this.state.isRemoved;
+		const date = this.props.todo.when;
+		const d = date.substring(8,10)+'/'+date.substring(5,7)+'/'+date.substring(0,4);
 
 		if (!isRemoved) {
 			return (
-				<li className="list-group-item">
-				<span className="badge" onClick={this.onClickRemove} style={{cursor:"pointer"}}>
-				<span className="glyphicon glyphicon-remove" /></span>
-				{this.props.todo.text}</li>
+						<div className="panel panel-primary">
+							<div className="panel-heading">
+								{d}<span className="badge" onClick={this.onClickRemove} style={{cursor:"pointer",float:'right'}}>
+								<span className="glyphicon glyphicon-remove" /></span>
+							</div>
+							<div className="panel-body">
+								{this.props.todo.text}
+							</div>
+					</div>
 			);
 		} else { 
 			return null;
@@ -66,12 +74,15 @@ class ToDoInput extends React.Component {
 		super(props);
 		this.state = {
 			id: 0,
-			value: '',
+			whatvalue: '',
+			when: '',
+			whenvalue: '',
 			isSubmitted: false,
 			isChecked: false,
 			isRemoved: false
 		};
-    this.handleChange = this.handleChange.bind(this);
+    this.handleWhatChange = this.handleWhatChange.bind(this);
+    this.handleWhenChange = this.handleWhenChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
    	this.handleInputChange = this.handleInputChange.bind(this);
 	}
@@ -84,9 +95,18 @@ class ToDoInput extends React.Component {
 		}
 	}
 
-  handleChange(event) {
+  handleWhatChange(event) {
   	this.setState({isSubmitted: false});
-    this.setState({value: event.target.value});
+    this.setState({
+    	whatvalue: event.target.value
+    });
+  }
+
+  handleWhenChange(value) {
+  	this.setState({isSubmitted: false});
+    this.setState({
+    	whenvalue: value
+    });
   }
 
   handleSubmit(event) {
@@ -96,7 +116,8 @@ class ToDoInput extends React.Component {
   	});
   	this.props.onChange({
   		id: this.state.id,
-  		text: this.state.value,
+  		text: this.state.whatvalue,
+  		when: this.state.whenvalue,
   		isRemoved: false
   	});
   	event.preventDefault();
@@ -104,15 +125,14 @@ class ToDoInput extends React.Component {
 
 	render() {
 		const isChecked = this.state.isChecked;
+		const showClearButton = false;
 
 		return (
 			<div>
 			<form className="input-group" onSubmit={this.handleSubmit}>
-      	<span className="input-group-addon">
-        	<input type="checkbox" checked={this.state.isChecked} onChange={this.handleInputChange}></input>
-      	</span>
-     		<input type="text" className="form-control" value={this.state.value} onChange={this.handleChange}></input>
-     		<span className="input-group-btn">
+     		<input type="text" className="form-control" placeholder="What" value={this.state.whatvalue} onChange={this.handleWhatChange}></input>
+     		<DatePicker type="text" className="form-control" dateFormat="DD/MM/YYYY" showClearButton={showClearButton} placeholder="When" value={this.state.whenvalue} onChange={this.handleWhenChange} />
+     		<span className="input-group-addon">
         	<button className="btn btn-default" type="submit" value="submit" disabled={isChecked}>Add</button>
       	</span>
     	</form>
@@ -159,7 +179,7 @@ class App extends React.Component {
 
 		return (
 			<div style={{width:400,marginLeft:10}}>
-			<h3>ToDos for Xavier <span className="badge">{nb} remaining</span> </h3>
+			<h3>ToDos App <span className="badge" style={{float:'right'}}>{nb} remaining</span> </h3>
 				<ToDoInput
 					onChange={this.handleChange} />
 				<ToDoList 
